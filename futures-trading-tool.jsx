@@ -505,6 +505,7 @@ export default function FuturesCalc() {
   const [legs, setLegs] = useState([]);
   const [legForm, setLegForm] = useState({ type: "add", price: "", size: "" });
   const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
 
   // Auto-sync margin <-> nominal
   useEffect(() => {
@@ -522,6 +523,23 @@ export default function FuturesCalc() {
   const removeLeg = (id) => setLegs(legs.filter((l) => l.id !== id));
 
   const calculate = () => {
+    setError("");
+    if (!entry || parseFloat(entry) <= 0) {
+      setError("⚠ Entry Price is required and must be greater than 0.");
+      return;
+    }
+    if (!close || parseFloat(close) <= 0) {
+      setError("⚠ Close Price is required and must be greater than 0.");
+      return;
+    }
+    if (!usdtMargin && !nominalValue) {
+      setError("⚠ Please enter either Margin (USDT) or Nominal Value.");
+      return;
+    }
+    if (!leverage || parseFloat(leverage) <= 0) {
+      setError("⚠ Leverage must be greater than 0.");
+      return;
+    }
     const res = computeTrade({
       side, entryPrice: entry, closePrice: close, leverage,
       usdtMargin, nominalValue,
@@ -539,7 +557,7 @@ export default function FuturesCalc() {
     setMakerFee("0.02"); setTakerFee("0.05");
     setFundingRate("0.01"); setFundingPeriods("3");
     setUseMaker(false); setUseTakerClose(true);
-    setResult(null);
+    setResult(null); setError("");
   };
 
   const pnlClass = (n) => (n == null ? "" : n >= 0 ? "pos" : "neg");
@@ -608,6 +626,20 @@ export default function FuturesCalc() {
               </div>
 
               <button className="btn btn-calc" onClick={calculate}>CALCULATE</button>
+              {error && (
+                <div style={{
+                  marginTop: 8,
+                  padding: "8px 10px",
+                  background: "rgba(255,69,96,0.1)",
+                  border: "1px solid rgba(255,69,96,0.3)",
+                  borderRadius: 3,
+                  color: "var(--red)",
+                  fontSize: 11,
+                  letterSpacing: "0.5px"
+                }}>
+                  {error}
+                </div>
+              )}
               <button className="btn btn-reset" onClick={reset}>↺ RESET ALL</button>
             </div>
           </div>
